@@ -8,5 +8,7 @@
 
 class MainController
 {
-
+	public function run($config)
+	{
+	}
 }
