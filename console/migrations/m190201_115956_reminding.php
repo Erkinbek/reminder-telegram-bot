@@ -16,7 +16,7 @@ class m190201_115956_reminding extends Migration
 
 		$this->createTable('{{%reminding}}', [
 			'id' => $this->primaryKey(),
-			'tuser_id' => $this->integer()->notNull()->unique(),
+			'tuser_id' => $this->integer()->notNull(),
 			'month' => $this->integer(2)->notNull(),
 			'day' => $this->integer(2)->notNull(),
 			'comment' => $this->string(255),
