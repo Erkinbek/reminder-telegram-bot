@@ -9,6 +9,7 @@
 namespace frontend\controllers;
 
 use common\models\Tusers;
+use common\models\Reminding;
 use Yii;
 use yii\helpers\Json;
 use yii\web\Controller;
@@ -33,7 +34,7 @@ class TelegramController extends Controller
 		return $data;
 	}
 
-	public function registerUser($data)
+	public function registerUser(Array $data)
 	{
 		if($this->isNewUser($data['message']['chat'])) {
 			$tUser = new Tusers();
@@ -46,7 +47,7 @@ class TelegramController extends Controller
 		}
 	}
 
-	public function isNewUser($user)
+	public function isNewUser(Array $user)
 	{
 		$tUser = Tusers::find()->where(['chat_id' => $user['id']])->one();
 		if ($tUser) {
@@ -56,17 +57,27 @@ class TelegramController extends Controller
 		}
 	}
 
-	public function registerDate($data)
+	public function registerDate(Array $data)
 	{
 		$result = $this->dateValidation($data['message']['text']);
 		if (is_array($result)) {
 			// ToDO Write to database and send success message
+			$model = new Reminding();
+			$tUser = Tusers::find()->select('id')->where(['chat_id' => $data['message']['chat']['id']])->one();
+			$model->tuser_id = $tUser->id;
+			$model->month = $result['month'];
+			$model->day = $result['day'];
+			$model->comment = $this->getComment($data['message']['text']);
+			if($model->save()) {
+				$message = "Saved successfully!";
+			}
 		} else {
-			$this->sendMessage($data['message']['chat']['id'], $result);
+			$message = $result;
 		}
+		$this->sendMessage($data['message']['chat']['id'], $message);
 	}
 
-	public function dateValidation($message)
+	public function dateValidation(String $message)
 	{
 		$date = str_replace(" ", "", substr($message, 0, 5));
 		$date = explode(".", $date);
@@ -84,7 +95,13 @@ class TelegramController extends Controller
 		}
 	}
 
-	public function sendMessage($chat_id, $message)
+	public function getComment(String $message)
+	{
+		$comment = substr($message, 6);
+		return $comment;
+	}
+
+	public function sendMessage(Int $chat_id, String $message)
 	{
 		Yii::$app->telegram->sendMessage([
 			'chat_id' => $chat_id,
