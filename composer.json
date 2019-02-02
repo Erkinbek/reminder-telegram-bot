@@ -7,7 +7,7 @@
     "license": "BSD-3-Clause",
     "support": {
         "issues": "https://github.com/Erkinbek/reminder-telegram-bot/issues?state=open",
-        "source": "Erkinbek/reminder-telegram-bot"
+        "source": "https://github.com/Erkinbek/reminder-telegram-bot"
     },
     "minimum-stability": "stable",
     "require": {
