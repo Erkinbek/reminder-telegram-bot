@@ -21,7 +21,9 @@ class TelegramController extends Controller
 	{
 		if(Yii::$app->request->isPost) {
 			$data = $this->getMessage();
-			$this->register($data);
+			$this->registerUser($data);
+			$result = $this->registerDate($data);
+			var_dump($result); exit();
 		}
 	}
 
@@ -31,7 +33,7 @@ class TelegramController extends Controller
 		return $data;
 	}
 
-	public function register($data)
+	public function registerUser($data)
 	{
 		if($this->isNewUser($data['message']['chat'])) {
 			$tUser = new Tusers();
@@ -52,5 +54,41 @@ class TelegramController extends Controller
 		} else {
 			return true;
 		}
+	}
+
+	public function registerDate($data)
+	{
+		$result = $this->dateValidation($data['message']['text']);
+		if (is_array($result)) {
+			// ToDO Write to database and send success message
+		} else {
+			$this->sendMessage($data['message']['chat']['id'], $result);
+		}
+	}
+
+	public function dateValidation($message)
+	{
+		$date = str_replace(" ", "", substr($message, 0, 5));
+		$date = explode(".", $date);
+		if(count($date) == 2) {
+			if (checkdate($date[1], $date[0], 2020)) {
+				return [
+					'day' => (int)ltrim($date[0], '0'),
+					'month' => (int)ltrim($date[1], '0'),
+				];
+			} else {
+				return "Wrong date, please send me valid date";
+			}
+		} else {
+			return "Wrond date format. Please send me date in valid format for me. Send me date and comment for this date. Example 07.01 Creator of bot's birthday. (This is 7th January)";
+		}
+	}
+
+	public function sendMessage($chat_id, $message)
+	{
+		Yii::$app->telegram->sendMessage([
+			'chat_id' => $chat_id,
+			'text' => $message
+		]);
 	}
 }
