@@ -22,9 +22,11 @@ class TelegramController extends Controller
 	{
 		if(Yii::$app->request->isPost) {
 			$data = $this->getMessage();
-			$this->registerUser($data);
+			$user = $this->registerUser($data);
+			if($user === true) {
+				return;
+			}
 			$result = $this->registerDate($data);
-			var_dump($result); exit();
 		}
 	}
 
@@ -36,14 +38,16 @@ class TelegramController extends Controller
 
 	public function registerUser(Array $data)
 	{
+		if($data['message']['text'] == '/start') {
+			$this->sendMessage($data['message']['chat']['id'], "Welcome! Send to me date and comment!");
+		}
 		if($this->isNewUser($data['message']['chat'])) {
 			$tUser = new Tusers();
 			$tUser->name = $data['message']['chat']['first_name'] . " " . $data['message']['chat']['last_name'];
 			$tUser->username = $data['message']['chat']['username'];
 			$tUser->chat_id = $data['message']['chat']['id'];
 			$tUser->save();
-		} else {
-			return;
+			return true;
 		}
 	}
 
