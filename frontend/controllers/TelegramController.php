@@ -38,9 +38,7 @@ class TelegramController extends Controller
 
 	public function registerUser(Array $data)
 	{
-		if($data['message']['text'] == '/start') {
-			$this->sendMessage($data['message']['chat']['id'], "Welcome! Send to me date and comment!");
-		}
+		$this->isStarted($data);
 		if($this->isNewUser($data['message']['chat'])) {
 			$tUser = new Tusers();
 			$tUser->name = $data['message']['chat']['first_name'] . " " . $data['message']['chat']['last_name'];
@@ -48,6 +46,13 @@ class TelegramController extends Controller
 			$tUser->chat_id = $data['message']['chat']['id'];
 			$tUser->save();
 			return true;
+		}
+	}
+
+	public function isStarted(Array $data)
+	{
+		if($data['message']['text'] == '/start') {
+			$this->sendMessage($data['message']['chat']['id'], Yii::$app->params['startMessage']);
 		}
 	}
 
@@ -73,7 +78,7 @@ class TelegramController extends Controller
 			$model->day = $result['day'];
 			$model->comment = $this->getComment($data['message']['text']);
 			if($model->save()) {
-				$message = "Saved successfully!";
+				$message = Yii::$app->params['savedMessage'];
 			}
 		} else {
 			$message = $result;
@@ -92,13 +97,17 @@ class TelegramController extends Controller
 					'month' => (int)ltrim($date[1], '0'),
 				];
 			} else {
-				return "Wrong date, please send me valid date";
+				return Yii::$app->params['wrongDate'];
 			}
 		} else {
-			return "Wrond date format. Please send me date in valid format for me. Send me date and comment for this date. Example 07.01 Creator of bot's birthday. (This is 7th January)";
+			return Yii::$app->params['wrongDateFormat'];
 		}
 	}
 
+	/**
+	 * @param String $message
+	 * @return bool|string
+	 */
 	public function getComment(String $message)
 	{
 		$comment = substr($message, 6);
