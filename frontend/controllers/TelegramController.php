@@ -70,7 +70,6 @@ class TelegramController extends Controller
 	{
 		$result = $this->dateValidation($data['message']['text']);
 		if (is_array($result)) {
-			// ToDO Write to database and send success message
 			$model = new Reminding();
 			$tUser = Tusers::find()->select('id')->where(['chat_id' => $data['message']['chat']['id']])->one();
 			$model->tuser_id = $tUser->id;
