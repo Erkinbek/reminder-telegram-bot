@@ -42,10 +42,6 @@ return [
 			'rules' => [
 			],
 		],
-		'telegram' => [
-			'class' => 'aki\telegram\Telegram',
-			'botToken' => '707929083:AAHwA5rDd_PvRlRa2PC5ReZxVvZ6tQ7vkFA',
-		]
 	],
 	'params' => $params,
 ];
