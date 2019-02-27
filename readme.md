@@ -28,6 +28,6 @@ $ yii migrate
 License
 ----
 
-MIT
+BSD 3-Clause
 
-**Free Software, Hell Yeah!**
+**Free Software**
