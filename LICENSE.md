@@ -1,6 +1,6 @@
 BSD 3-Clause License
 
-Copyright (c) 2019, Erkin Pardayev
+Copyright (c) 2019, Erkin Pardayev (https://pardayev.uz)
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
