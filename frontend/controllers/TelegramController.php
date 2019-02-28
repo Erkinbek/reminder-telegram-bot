@@ -10,6 +10,7 @@ namespace frontend\controllers;
 
 use common\models\Tusers;
 use common\models\Reminding;
+use DateTime;
 use Yii;
 use yii\helpers\Json;
 use yii\web\Controller;
@@ -33,6 +34,10 @@ class TelegramController extends Controller
 	public function getMessage()
 	{
 		$data = Json::decode(file_get_contents('php://input'));
+		if ($data['message']['text'] == '/list') {
+			$this->sendAllUserNotes($data['message']['chat']['id']);
+			exit();
+		}
 		return $data;
 	}
 
@@ -119,5 +124,25 @@ class TelegramController extends Controller
 			'chat_id' => $chat_id,
 			'text' => $message
 		]);
+	}
+
+	public function sendAllUserNotes($chat_id)
+	{
+		$userID = Tusers::find()->select('id')->where(['chat_id' => $chat_id])->one()->id;
+		$notes = Reminding::find()->where(['tuser_id' =>$userID])->all();
+		foreach ($notes as $note) {
+			$msg = $this->createNoteMessage($note);
+			$this->sendMessage($chat_id, $msg);
+		}
+	}
+
+	public function createNoteMessage($note)
+	{
+		$monthNum  = $note->month;
+		$dateObj   = DateTime::createFromFormat('!m', $monthNum);
+		$monthName = $dateObj->format('F');
+		$date = $note->day . " - " . $monthName;
+		$remindText = $date . " " . $note->comment;
+		return $remindText;
 	}
 }
