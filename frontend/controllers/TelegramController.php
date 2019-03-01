@@ -34,6 +34,14 @@ class TelegramController extends Controller
 	public function getMessage()
 	{
 		$data = Json::decode(file_get_contents('php://input'));
+		if(isset($data['callback_query'])) {
+			$id = $data['callback_query']['data'];
+			$user = $data['callback_query']['message']['chat']['id'];
+			$note = Reminding::find()->where(['id' => $id])->one();
+			$note->delete();
+			$this->sendMessage($user, 'The note deleted successfully');
+			exit();
+		}
 		if ($data['message']['text'] == '/list') {
 			$this->sendAllUserNotes($data['message']['chat']['id']);
 			exit();
@@ -130,19 +138,50 @@ class TelegramController extends Controller
 	{
 		$userID = Tusers::find()->select('id')->where(['chat_id' => $chat_id])->one()->id;
 		$notes = Reminding::find()->where(['tuser_id' =>$userID])->all();
+		$counter = 1;
 		foreach ($notes as $note) {
-			$msg = $this->createNoteMessage($note);
-			$this->sendMessage($chat_id, $msg);
+			$msg = $this->createNoteMessage($note, null);
+//			$this->sendMessage($chat_id, $msg);
+			$data[] = [ [
+				'text' => trim(ltrim($msg,".")),
+				'callback_data' => $note->id
+			]
+			];
+			$counter++;
 		}
+		$this->sendKeyboard($token = 'TOKEN', $to = $chat_id, $data);
 	}
 
-	public function createNoteMessage($note)
+	public function createNoteMessage($note, $counter)
 	{
 		$monthNum  = $note->month;
 		$dateObj   = DateTime::createFromFormat('!m', $monthNum);
 		$monthName = $dateObj->format('F');
 		$date = $note->day . " - " . $monthName;
-		$remindText = $date . " " . $note->comment;
+		$remindText = $counter . ". " . $date . " " . $note->comment;
 		return $remindText;
+	}
+
+	public function sendKeyboard($token, $to, $data)
+	{
+		$url = 'https://api.telegram.org/bot' . $token . '/sendMessage';
+		$inlinekeys = [
+			"inline_keyboard" => $data
+		];
+		$content = array(
+			"chat_id" => $to,
+			"text" => 'You have saved this notes',
+			"reply_markup" =>  json_encode($inlinekeys)
+		);
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_HEADER, false);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($content));
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		$result = curl_exec($ch);
+		curl_close($ch);
 	}
 }
